@@ -157,13 +157,6 @@ Contains all Verilog RTL designs and testbench files for the workshop:
 ### What is Design?
 > **Design** is the synthesizable Verilog HDL code (or set of codes) written to implement specific architectural and behavioral specifications.
 
-```text
-       +-----------------------+
-Inputs |                       | Outputs
------> |      RTL DESIGN       | ------->
-       |                       |
-       +-----------------------+
-```
 
 <img width="1366" height="768" alt="What is Design" src="https://github.com/user-attachments/assets/1f4c0b58-7e1a-479e-9e4d-9fb70e1e44a7" />
 
@@ -182,18 +175,6 @@ Inputs |                       | Outputs
 - **Upon change to the input, the output is evaluated.**
 - If there is no change on the inputs, the simulator does not evaluate outputs, saving simulation time and CPU resources.
 
-```text
-+--------------------+         Signal Change         +--------------------+
-|   Input Stimulus   |  ===========================> |     Simulator      |
-|    (Testbench)     |                               | (Evaluates Logic)  |
-+--------------------+                               +--------------------+
-                                                               ||
-                                                               \/ Output Updated
-                                                     +--------------------+
-                                                     |    Output Wave     |
-                                                     | (Dump to .vcd file)|
-                                                     +--------------------+
-```
 
 ---
 
@@ -208,24 +189,7 @@ Inputs |                       | Outputs
 
 ### The 3-Step Simulation Flow (`iverilog` & `GTKWave`)
 
-```text
-   [ RTL Design (.v) ]       [ Testbench (.v) ]
-            \                       /
-             \                     /
-              v                   v
-         +-----------------------------+
-         |      iverilog compiler      |
-         +-----------------------------+
-                        |
-                        v Generates executable engine
-              [ Output executable ]
-                        |
-                        v Run: ./<output.out>
-              [ Waveform Dump (.vcd) ]
-                        |
-                        v Run: gtkwave <dumpfile>.vcd &
-              [ GTKWave GUI Viewer ]
-```
+|
 
 <img width="1366" height="768" alt="Simulation Flow" src="https://github.com/user-attachments/assets/8328bffc-baec-4ac6-a46f-73e17b1392c0" />
 
@@ -272,21 +236,10 @@ gvim tb_good_mux.v -o good_mux.v &
 ### Lab 1: Behavioral Simulation of 2:1 Multiplexer (`good_mux.v`)
 
 #### Design Code: `good_mux.v`
-```verilog
-module good_mux (
-    input i0,
-    input i1,
-    input sel,
-    output reg y
-);
-always @(*) begin
-    if (sel)
-        y = i1;
-    else
-        y = i0;
-end
-endmodule
-```
+
+
+<img width="1366" height="768" alt="Screenshot (224)" src="https://github.com/user-attachments/assets/1d1bef7a-c462-49f0-b163-e94bba4549e4" />
+
 
 #### Simulation Commands:
 ```bash
@@ -302,10 +255,23 @@ iverilog good_mux.v tb_good_mux.v
 gtkwave tb_good_mux.vcd &
 ```
 
-<!-- Add your GTKWave good_mux waveform screenshot below -->
-<!-- ![good_mux Waveform](images/good_mux_waveform.png) -->
+<img width="1366" height="768" alt="Screenshot (221)" src="https://github.com/user-attachments/assets/649bd62b-fb8c-41f5-8736-2dbcf9bcec95" />
+
+
+
 
 ---
+### YOSYS INTRODUCTION
+
+<img width="1366" height="768" alt="Screenshot (226)" src="https://github.com/user-attachments/assets/f9cbf73f-2d40-4169-a1dc-77d19c36248e" />
+
+
+<img width="1366" height="768" alt="Screenshot (229)" src="https://github.com/user-attachments/assets/976dc888-22e1-4039-8210-266c7a81274f" />
+
+<img width="1366" height="768" alt="Screenshot (246)" src="https://github.com/user-attachments/assets/c23ff691-b624-4eb2-a889-61641db18b31" />
+
+---
+
 
 ### Lab 2: Logic Synthesis with Yosys (`good_mux.v`)
 
@@ -321,41 +287,33 @@ yosys> abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
 yosys> show
 ```
 
+<img width="1366" height="768" alt="Screenshot (249)" src="https://github.com/user-attachments/assets/61f6d1dd-3987-441d-a163-2420062c6022" />
+
+
+
 #### Synthesis Results & Optimization:
 - In modern Yosys versions, the synthesis engine maps `good_mux` directly to a single dedicated physical cell: **`sky130_fd_sc_hd__mux2_1`**!
 - Inputs `i0`, `i1`, and `sel` map directly to pins `A0`, `A1`, and select `S`, while output `y` connects to pin `X`.
 - This single-cell mapping achieves minimum silicon area and higher operating speed compared to older 3-gate decomposed equivalents (Inverter + NAND + O21AI).
 
-<!-- Add your good_mux synthesized schematic screenshot below -->
-<!-- ![good_mux Synthesized Schematic](images/good_mux_schematic.png) -->
+
+
+<img width="1366" height="768" alt="Screenshot (253)" src="https://github.com/user-attachments/assets/2a1ca533-4251-4fbb-adc0-8268aacb0070" />
 
 ---
 
 ### Synthesized Netlist Generation (`write_verilog -noattr`)
 To save the clean synthesized netlist without internal compiler attributes:
-```text
-yosys> write_verilog -noattr good_mux_netlist.v
-```
 
-Generated Gate-Level Netlist:
-```verilog
-module good_mux(i0, i1, sel, y);
-  input i0;
-  wire i0;
-  input i1;
-  wire i1;
-  input sel;
-  wire sel;
-  output y;
-  wire y;
-  sky130_fd_sc_hd__mux2_1 _0_ (
-    .A0(i0),
-    .A1(i1),
-    .S(sel),
-    .X(y)
-  );
-endmodule
-```
+
+
+<img width="1366" height="768" alt="Screenshot (257)" src="https://github.com/user-attachments/assets/15e727d5-8aa0-415d-8b81-67d979f3451c" />
+
+
+
+
+    
+
 
 ---
 
@@ -371,8 +329,10 @@ Viewing the library in GVim:
 gvim ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib &
 ```
 
-<!-- Add your Liberty file in GVim screenshot below -->
-<!-- ![Liberty File](images/liberty_gvim.png) -->
+<img width="1366" height="768" alt="Screenshot (261)" src="https://github.com/user-attachments/assets/60e30866-8fb4-4948-8e0f-2462c295c6dd" />
+
+
+<img width="1366" height="768" alt="Screenshot (264)" src="https://github.com/user-attachments/assets/3e754c67-10fe-4daf-9849-d19ee2dd5e7b" />
 
 ---
 
@@ -380,6 +340,8 @@ gvim ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib &
 `multiple_modules.v` contains a top module instantiating two sub-modules:
 - `sub_module1`: implements an AND gate ($y = a \cdot b$).
 - `sub_module2`: implements an OR gate ($y = c + d$).
+
+<img width="1366" height="768" alt="Screenshot (275)" src="https://github.com/user-attachments/assets/b2204476-c991-4744-8066-eb2015860221" />
 
 #### Synthesis Commands:
 ```text
@@ -391,6 +353,8 @@ yosys> abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
 yosys> show multiple_modules
 ```
 
+<img width="1366" height="768" alt="Screenshot (266)" src="https://github.com/user-attachments/assets/8a381e4b-a933-4247-b813-dd5a422d19bb" />
+
 #### Observation:
 In the hierarchical view, Yosys preserves the sub-module boundaries, showing `sub_module1` and `sub_module2` as modular hierarchical blocks within the top module.
 
@@ -398,6 +362,10 @@ In the hierarchical view, Yosys preserves the sub-module boundaries, showing `su
 <!-- ![Hierarchical Synthesis](images/hierarchical_schematic.png) -->
 
 ---
+
+<img width="1366" height="768" alt="Screenshot (271)" src="https://github.com/user-attachments/assets/86ed3fa8-8f42-4c0a-8c6c-39dcb8e16efc" />
+
+<img width="1366" height="768" alt="Screenshot (274)" src="https://github.com/user-attachments/assets/c5b1db43-3a9b-4a72-8229-c6ed204451b8" />
 
 ### Flat Synthesis (`flatten`)
 In flat synthesis, the module boundaries are dissolved to allow Yosys to optimize logic across module borders:
@@ -407,13 +375,11 @@ yosys> flatten
 yosys> show
 ```
 
+
+
 #### Observation:
 The `sub_module1` and `sub_module2` boundary boxes disappear, and physical Sky130 gates (`sky130_fd_sc_hd__and2_0` and `sky130_fd_sc_hd__or2_0`) are directly instantiated at the top level.
 
-<!-- Add your Flattened Schematic screenshot below -->
-<!-- ![Flattened Synthesis](images/flattened_schematic.png) -->
-
----
 
 ### Sub-Module Level Synthesis (`sub_module1`)
 If a specific sub-module needs to be synthesized and characterized independently (e.g., for duplicate instances or timing-critical paths):
@@ -434,6 +400,8 @@ Yosys synthesizes ONLY `sub_module1`, directly mapping to a Sky130 AND gate (`sk
 <!-- ![sub_module1 Schematic](images/sub_module1_schematic.png) -->
 
 ---
+
+<img width="1366" height="768" alt="Screenshot (282)" src="https://github.com/user-attachments/assets/7595b95e-a079-4e86-811e-ceee63414f1a" />
 
 ### Hardware Optimization for Multipliers (`mult_2.v`)
 Multiplication by powers of 2 ($2^n$, such as $A \times 2$ or $A \times 8$) does **not** require physical hardware multiplier cells:
@@ -457,6 +425,10 @@ Yosys synthesizes **zero multiplier cells**! It maps input bits `2:0` to output 
 
 ---
 
+
+<img width="458" height="485" alt="sub_module1_window" src="https://github.com/user-attachments/assets/ffb0f0f6-ec76-401e-97ba-52c0edbddfce" />
+
+
 ## 7. Day 3: Combinational and Sequential Logic Optimizations
 
 ### Combinational Logic Optimization (`opt_check.v`, `opt_check3.v`)
@@ -476,6 +448,8 @@ yosys> abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
 yosys> show
 ```
 
+<img width="1366" height="768" alt="Screenshot (305)" src="https://github.com/user-attachments/assets/adcfa888-cc30-4750-b9b5-a7d4f5896a08" />
+
 #### Observation:
 Even though the RTL described complex multiplexed logic, the optimizer simplified the entire boolean equation down to **A SINGLE 3-input AND GATE (`sky130_fd_sc_hd__and3_2`)**!
 
@@ -483,6 +457,8 @@ Even though the RTL described complex multiplexed logic, the optimizer simplifie
 <!-- ![opt_check3 Schematic](images/opt_check3_schematic.png) -->
 
 ---
+
+<img width="1366" height="768" alt="Screenshot (312)" src="https://github.com/user-attachments/assets/788a1997-4865-4fbe-a0e1-9356d6f4ee6f" />
 
 ### Sequential Logic Optimization: Constant Flop Optimization (`dff_const1` to `dff_const4`)
 
@@ -495,17 +471,33 @@ Sequential optimization analyzes D-Flip-Flop behavior under constant inputs:
 | **`dff_const3`** | Dual Flop Architecture | Mixed | Constants | **YES** | Two Flip-Flops retained (`dfstp` and `dfrtp`). |
 | **`dff_const4`** | Constant Output Flop | $Q = 1$ | $D = 1$ | **NO** | Output never changes from 1. Both Flip-Flops deleted; outputs tied directly to `1'b1`. |
 
+
+
 #### Simulation of `dff_const1` (`iverilog` & `gtkwave`):
 ```bash
 iverilog dff_const1.v tb_dff_const1.v
 ./a.out
 gtkwave tb_dff_const1.vcd &
 ```
+
+<img width="1366" height="768" alt="Screenshot (314)" src="https://github.com/user-attachments/assets/2d14a5c0-57ee-41a7-85f2-1d51e24edef8" />
+
+
+<img width="1366" height="768" alt="Screenshot (320)" src="https://github.com/user-attachments/assets/fa4d0bd0-45d3-4eaf-a29a-3cd8630ce839" />
+
+<img width="1366" height="768" alt="Screenshot (327)" src="https://github.com/user-attachments/assets/2b4c48e4-52e6-4be2-99f9-b040cd056d33" />
+
 - At simulation time $0 - 1500\text{ ns}$, `reset = 1`, holding $q = 0$.
 - At $1550\text{ ns}$, `reset` drops to $0$, and on the clock edge, $q$ transitions to $1$.
 
 <!-- Add your dff_const1 Waveform screenshot below -->
 <!-- ![dff_const1 Waveform](images/dff_const1_waveform.png) -->
+### Similarly for `dff_const2` (`iverilog` & `gtkwave`);
+
+<img width="1366" height="768" alt="Screenshot (322)" src="https://github.com/user-attachments/assets/a2935cd6-2ced-41b6-a06f-2422b7e8b764" />
+### Similarly for `dff_const3` (`iverilog` & `gtkwave`);
+<img width="1366" height="768" alt="Screenshot (329)" src="https://github.com/user-attachments/assets/f5947055-5db2-4026-b1de-4d5994d3a920" />
+<img width="1366" height="768" alt="Screenshot (337)" src="https://github.com/user-attachments/assets/7b2f6812-3f94-49b8-bf42-82048bcc9944" />
 
 #### Synthesis of `dff_const4` (Complete Flop Elimination):
 ```text
@@ -525,6 +517,7 @@ In `dff_const4`, because the output is perpetually `1`, Yosys eliminates both Fl
 <!-- ![dff_const4 Schematic](images/dff_const4_schematic.png) -->
 
 ---
+<img width="698" height="687" alt="WhatsApp Image 2026-11-12 at 7 37 53 PM" src="https://github.com/user-attachments/assets/fb11768d-7653-40af-a199-78819562f164" />
 
 ### Sequential Logic Optimization: Unused Flop Elimination (`counter_opt.v` vs `counter_opt2.v`)
 
@@ -538,6 +531,9 @@ assign q = count[0];
 
 <!-- Add your counter_opt 1-flop Schematic screenshot below -->
 <!-- ![counter_opt 1-flop Schematic](images/counter_opt_schematic.png) -->
+<img width="1366" height="768" alt="Screenshot (344)" src="https://github.com/user-attachments/assets/1bf1634d-80bc-4f92-92e0-52452f9dbcde" />
+
+<img width="1366" height="768" alt="Screenshot (340)" src="https://github.com/user-attachments/assets/579e00e4-c3a3-4b36-a3a1-14458aa338fd" />
 
 #### 2. `counter_opt2.v` (Full Flop Scaling):
 In `counter_opt2.v`, the output is modified so that all 3 counter bits are required to compute the output:
@@ -551,6 +547,8 @@ assign q = (count == 3'b100);
 <!-- ![counter_opt2 3-flop Schematic](images/counter_opt2_schematic.png) -->
 
 ---
+
+<img width="710" height="649" alt="WhatsApp Image 2026-11-12 at 7 42 31 PM" src="https://github.com/user-attachments/assets/4c48c206-89f9-44d5-af0d-128df6768a0e" />
 
 ## 8. Synthesis Command Quick Reference
 
@@ -570,7 +568,7 @@ assign q = (count == 3'b100);
 
 ## 9. Author & Acknowledgements
 
-- **Author:** Divyashree Krishna
+- **Author:** Divyashree K
 - **Course:** VSD - SKY130 RTL Design and Synthesis Workshop
 - **Instructor:** Kunal Ghosh, VLSI System Design (VSD)
 - **Technology:** SkyWater 130nm PDK (`sky130_fd_sc_hd`)
